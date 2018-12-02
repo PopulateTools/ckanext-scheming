@@ -63,6 +63,19 @@ DEFAULT_PRESETS = 'ckanext.scheming:presets.json'
 log = logging.getLogger(__name__)
 
 
+def add_support_for_translated_tags(field, convert_extras, validators=None):
+    field_name = field[u'field_name']
+
+    if field_name in [u'tags_es', u'tags_en', u'tags_eu']:
+        convert_extras = False
+        if validators != None:
+            validators.append(get_converter('convert_to_translated_tags')(field_name))
+        else:
+            validators = []
+
+    return (convert_extras, validators)
+
+
 class _SchemingMixin(object):
     """
     Store single plugin instances in class variable 'instance'
@@ -200,6 +213,7 @@ class _GroupOrganizationMixin(object):
                 f,
                 scheming_schema,
                 f['field_name'] not in schema
+                #((f['field_name'] not in schema) and (f['field_name'] not in ['tags_es', 'tags_en']))
             )
 
         return navl_validate(data_dict, schema, context)
@@ -408,6 +422,8 @@ def _field_output_validators(f, schema, convert_extras,
     """
     Return the output validators for a scheming field f
     """
+    convert_extras, validators = add_support_for_translated_tags(f, convert_extras)
+
     if convert_extras:
         validators = [convert_from_extras_type, ignore_missing]
     else:
@@ -430,6 +446,8 @@ def _field_validators(f, schema, convert_extras):
     else:
         validators = [ignore_missing, unicode]
 
+    convert_extras, validators = add_support_for_translated_tags(f, convert_extras, validators)
+
     if convert_extras:
         validators = validators + [convert_to_extras]
     return validators
@@ -443,6 +461,8 @@ def _field_create_validators(f, schema, convert_extras):
     if 'create_validators' not in f:
         return _field_validators(f, schema, convert_extras)
     validators = validators_from_string(f['create_validators'], f, schema)
+
+    convert_extras, validators = add_support_for_translated_tags(f, convert_extras, validators)
 
     if convert_extras:
         validators = validators + [convert_to_extras]
