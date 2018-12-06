@@ -65,11 +65,17 @@ log = logging.getLogger(__name__)
 
 def add_support_for_translated_tags(field, convert_extras, validators=None):
     field_name = field[u'field_name']
+    I18N_TAGS_FIELDS = ['tags_es', 'tags_en', 'tags_eu']
+    TOPICS_FIELDS = ['custom_topic', 'custom_subtopic']
 
-    if field_name in [u'tags_es', u'tags_en', u'tags_eu']:
+    if field_name in (I18N_TAGS_FIELDS + TOPICS_FIELDS):
         convert_extras = False
+
         if validators != None:
-            validators.append(get_converter('convert_to_translated_tags')(field_name))
+            if field_name in I18N_TAGS_FIELDS:
+                validators.append(get_converter('convert_to_translated_tags')(field_name))
+            elif field_name in TOPICS_FIELDS:
+                validators.append(get_converter('convert_to_custom_topic_tags')(field_name + 's'))
         else:
             validators = []
 
@@ -213,7 +219,6 @@ class _GroupOrganizationMixin(object):
                 f,
                 scheming_schema,
                 f['field_name'] not in schema
-                #((f['field_name'] not in schema) and (f['field_name'] not in ['tags_es', 'tags_en']))
             )
 
         return navl_validate(data_dict, schema, context)
