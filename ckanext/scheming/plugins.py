@@ -73,9 +73,12 @@ def add_support_for_translated_tags(field, convert_extras, validators=None):
 
         if validators != None:
             if field_name in I18N_TAGS_FIELDS:
+                print "Appended convert_to_translated_tags to field", field_name
                 validators.append(get_converter('convert_to_translated_tags')(field_name))
             elif field_name in TOPICS_FIELDS:
-                validators.append(get_converter('convert_to_custom_topic_tags')(field_name + 's'))
+                print "Appended convert_to_custom_topic_tags to field", field_name
+                validators.append(get_converter('convert_to_custom_topic_tags')(field_name))
+
         else:
             validators = []
 
